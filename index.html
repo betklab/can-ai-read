@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can AI read your site?</title>
+<meta name="description" content="Check whether ChatGPT, Claude, Perplexity and Google's AI can reach and read a web page: robots.txt per AI bot, a live visit as each bot, JavaScript and noindex checks, and llms.txt.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233b5bdb'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f7f7f4; --card:#ffffff; --ink:#1b1c1f; --muted:#5f6368; --line:#e3e3de;
+  --accent:#3b5bdb; --good:#1f7a4d; --good-bg:#e6f4ec; --warn:#9a5b00; --warn-bg:#fdf1dc;
+  --bad:#b42318; --bad-bg:#fde8e6; --chip:#f0f0ec;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#121316; --card:#1b1c20; --ink:#ececec; --muted:#a0a3a8; --line:#2c2e33;
+    --accent:#8ea4ff; --good:#5fd39a; --good-bg:#16291f; --warn:#f2b45a; --warn-bg:#2d2413;
+    --bad:#ff8a80; --bad-bg:#331a18; --chip:#25272c; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:960px;margin:0 auto;padding:48px 16px 64px}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+.lead{color:var(--muted);margin:0 0 28px;max-width:640px}
+form{display:flex;gap:8px;flex-wrap:wrap}
+input{flex:1 1 280px;font:inherit;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+input:focus{outline:2px solid var(--accent);outline-offset:1px}
+button{font:inherit;font-weight:600;padding:12px 20px;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+.examples{font-size:14px;color:var(--muted);margin-top:10px}
+.examples a{color:var(--accent);cursor:pointer;text-decoration:none;margin-right:10px}
+section{margin-top:32px}
+h2{font-size:18px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 12px}
+.verdict{border-radius:12px;padding:16px 18px;margin-top:28px;font-weight:600}
+.verdict small{display:block;font-weight:400;color:var(--muted);margin-top:4px;word-break:break-all}
+.good{background:var(--good-bg);color:var(--good)} .warn{background:var(--warn-bg);color:var(--warn)} .bad{background:var(--bad-bg);color:var(--bad)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--chip);padding:1px 6px;border-radius:6px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.note{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.fact{padding:14px 16px}
+.fact b{display:block;font-size:13px;color:var(--muted);font-weight:600;margin-bottom:2px}
+@media (max-width:640px){
+  main{padding-top:32px}
+  table{min-width:0}
+  thead{display:none}
+  tr{display:block;padding:12px 14px;border-bottom:1px solid var(--line)}
+  tr:last-child{border-bottom:0}
+  td{display:block;border:0;padding:2px 0}
+  td:nth-child(1),td:nth-child(2){display:inline-block;margin-right:8px;font-weight:600}
+  td:nth-child(3){color:var(--muted);margin-bottom:6px}
+  td:nth-child(4),td:nth-child(5){display:inline-block;vertical-align:top;width:49%}
+}
+.foot{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+.err{margin-top:20px;color:var(--bad)}
+.spinner{margin-top:24px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Can AI read your site?</h1>
+  <p class="lead">Check whether ChatGPT, Claude, Perplexity and Google&rsquo;s AI can reach a page. See which bots your robots.txt or firewall blocks, and whether the page has readable text without JavaScript.</p>
+
+  <form id="f">
+    <input id="u" name="url" placeholder="example.com or a full page address" autocomplete="url" inputmode="url" required>
+    <button id="go" type="submit">Check</button>
+  </form>
+  <div class="examples">Try: <a data-ex="peec.ai">peec.ai</a><a data-ex="nytimes.com">nytimes.com</a><a data-ex="vercel.com">vercel.com</a></div>
+
+  <div id="out" aria-live="polite"></div>
+
+  <p class="foot">
+    <strong>How it works.</strong> The check reads the site&rsquo;s robots.txt and applies its rules to each AI bot. It then visits the page once as a normal browser and once under each bot&rsquo;s name. If the browser gets in but a bot gets an error, a firewall is probably turning that bot away. These visits come from a cloud server, while real bots come from their own addresses, so some firewalls may treat them differently.
+    llms.txt is a proposed standard: no major AI search engine has confirmed it reads the file, so it&rsquo;s shown for information only.
+  </p>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v; else n.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null) n.append(k instanceof Node ? k : document.createTextNode(String(k)));
+  return n;
+};
+const pill = (cls, text) => el('span', { class: 'pill ' + cls, text });
+
+function robotsCell(b) {
+  const r = b.robots;
+  const p = r.allowed ? pill('good', 'Allowed') : pill('bad', 'Blocked');
+  const why = r.rule ? el('span', { class: 'note' }, el('code', { text: r.rule }), r.matchedAgent ? ` (rules for ${r.matchedAgent})` : '')
+                     : el('span', { class: 'note', text: r.matchedAgent ? `no rule matches (rules for ${r.matchedAgent})` : 'no rules for this bot' });
+  return el('td', {}, p, why);
+}
+function liveCell(b) {
+  const l = b.live;
+  if (l.state === 'not-applicable') return el('td', {}, pill('', '—'), el('span', { class: 'note', text: 'robots.txt rule only, never visits' }));
+  if (l.state === 'ok') return el('td', {}, pill('good', `Got in (${l.status})`));
+  if (l.state === 'blocked') return el('td', {}, pill('bad', `Turned away (${l.status || l.error})`), el('span', { class: 'note', text: 'the browser got in, this bot didn’t' }));
+  return el('td', {}, pill('warn', `Error (${l.status || l.error})`));
+}
+function botTable(bots) {
+  return el('div', { class: 'card tablewrap' }, el('table', {},
+    el('thead', {}, el('tr', {}, ['Company', 'Bot', 'What it does', 'robots.txt', 'Live visit'].map((h) => el('th', { text: h })))),
+    el('tbody', {}, bots.map((b) => el('tr', {},
+      el('td', { text: b.company }),
+      el('td', {}, el('code', { text: b.token })),
+      el('td', {}, b.purpose, b.note ? el('span', { class: 'note', text: b.note }) : null),
+      robotsCell(b), liveCell(b))))));
+}
+
+function render(r) {
+  const out = $('#out'); out.replaceChildren();
+  out.append(el('div', { class: 'verdict ' + r.verdict.level }, r.verdict.text,
+    el('small', { text: `Checked ${r.checked}${r.finalUrl && r.finalUrl !== r.checked ? ' → ' + r.finalUrl : ''}` })));
+
+  const answers = r.bots.filter((b) => b.kind === 'answers');
+  const training = r.bots.filter((b) => b.kind === 'training');
+  out.append(el('section', {}, el('h2', { text: 'AI answers and search' }),
+    el('p', { class: 'sub', text: 'Blocking these keeps the site out of AI answers. This is what matters for visibility.' }), botTable(answers)));
+  out.append(el('section', {}, el('h2', { text: 'Model training' }),
+    el('p', { class: 'sub', text: 'Blocking these only opts out of training. The site can still appear in AI answers.' }), botTable(training)));
+
+  const facts = [];
+  if (r.page) {
+    facts.push(el('div', { class: 'card fact' }, el('b', { text: 'Readable text without JavaScript' }),
+      r.page.jsRendered ? pill('warn', `${r.page.words} words`) : pill('good', `${r.page.words} words`),
+      el('span', { class: 'note', text: r.page.jsRendered ? 'Looks built by JavaScript. AI crawlers mostly read plain HTML, so they may see an almost empty page.' : 'AI crawlers can read the page text from plain HTML.' })));
+    facts.push(el('div', { class: 'card fact' }, el('b', { text: 'Indexing' }),
+      r.page.noindex ? pill('bad', 'noindex') : pill('good', 'Indexable'),
+      el('span', { class: 'note', text: r.page.noindex ? `Set by the ${r.page.noindexSource}. Search engines are asked to leave this page out.` : 'No noindex tag or header found.' })));
+    if (r.page.title) facts.push(el('div', { class: 'card fact' }, el('b', { text: 'Page title' }), r.page.title));
+  } else {
+    facts.push(el('div', { class: 'card fact' }, el('b', { text: 'Page' }), pill('bad', `Not loaded (${r.pageStatus || 'no response'})`)));
+  }
+  const rs = r.robots;
+  facts.push(el('div', { class: 'card fact' }, el('b', { text: 'robots.txt' }),
+    rs.state === 'found' ? pill('good', 'Found') : rs.state === 'missing' ? pill('', 'None, so everything is allowed') : pill('bad', 'Unreachable'),
+    el('span', { class: 'note', text: rs.state === 'unreachable' ? 'Careful crawlers treat an unreachable robots.txt as “stay out”.' : (rs.note || (rs.sitemaps.length ? `${rs.sitemaps.length} sitemap${rs.sitemaps.length > 1 ? 's' : ''} listed` : 'No sitemap listed')) })));
+  facts.push(el('div', { class: 'card fact' }, el('b', { text: 'llms.txt' }),
+    r.llms.present ? pill('good', 'Found') : pill('', 'Not found'),
+    el('span', { class: 'note', text: r.llms.present ? `${r.llms.title ? '“' + r.llms.title + '”, ' : ''}${Math.round(r.llms.bytes / 100) / 10} KB. Optional: no major AI engine has confirmed using it.` : 'Optional: no major AI engine has confirmed using it.' })));
+  out.append(el('section', {}, el('h2', { text: 'What the bots see' }), el('div', { class: 'grid' }, facts)));
+}
+
+async function check(url) {
+  const go = $('#go'); go.disabled = true;
+  const params = new URLSearchParams({ url });
+  history.replaceState(null, '', '?' + params);
+  $('#out').replaceChildren(el('p', { class: 'spinner', text: 'Checking robots.txt and visiting the page as 11 bots…' }));
+  try {
+    const res = await fetch('/api/check?' + params);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Check failed');
+    render(data);
+  } catch (e) {
+    $('#out').replaceChildren(el('p', { class: 'err', text: e.message }));
+  } finally { go.disabled = false; }
+}
+
+$('#f').addEventListener('submit', (e) => { e.preventDefault(); check($('#u').value); });
+document.querySelectorAll('[data-ex]').forEach((a) => a.addEventListener('click', () => { $('#u').value = a.dataset.ex; check(a.dataset.ex); }));
+const start = new URLSearchParams(location.search).get('url');
+if (start) { $('#u').value = start; check(start); }
+</script>
+</body>
+</html>
